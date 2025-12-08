@@ -1,6 +1,6 @@
 [
   {
-    "id": "07a825c3-3878-42f5-8413-7aab151f96b4",
+    "id": "9ecbabff-4efe-437f-9af3-878d21ac46f0",
     "client_code": "CL-1001",
     "legal_name": "Acme Corporation Ltd.",
     "entity_type": "Public",
@@ -17,11 +17,11 @@
     "contact_email": "robert@acmecorp.com",
     "contact_phone": "+1-555-0101",
     "status": "Active",
-    "created_at": "2025-12-08T18:32:19.401Z",
-    "updated_at": "2025-12-08T18:32:19.401Z"
+    "created_at": "2025-12-08T19:16:52.657Z",
+    "updated_at": "2025-12-08T19:16:52.657Z"
   },
   {
-    "id": "b9c8941b-0094-4c6a-bb44-fe2f42c16e8f",
+    "id": "4bb9dc22-9bb4-48a2-883e-f7eb70f774ed",
     "client_code": "CL-1002",
     "legal_name": "TechStart Innovations Inc.",
     "entity_type": "Non-Public",
@@ -38,28 +38,7 @@
     "contact_email": "sarah@techstart.com",
     "contact_phone": "+1-555-0102",
     "status": "Active",
-    "created_at": "2025-12-08T18:32:19.401Z",
-    "updated_at": "2025-12-08T18:32:19.401Z"
-  },
-  {
-    "id": "05a5bf33-d518-47ed-8709-81f2dffbf1a0",
-    "client_code": "CL-1003",
-    "legal_name": "Global Manufacturing Co.",
-    "entity_type": "Public",
-    "address_line1": "123 Business Street",
-    "address_line2": "Suite 100",
-    "city": "Chicago",
-    "state": "IL",
-    "country": "United States",
-    "zip_code": "60601",
-    "incorporation_date": null,
-    "business_nature": "Professional Services",
-    "tax_id": "EIN-45-6789012",
-    "contact_name": "Michael Chen",
-    "contact_email": "mchen@globalmanuf.com",
-    "contact_phone": "+1-555-0103",
-    "status": "Active",
-    "created_at": "2025-12-08T18:32:19.402Z",
-    "updated_at": "2025-12-08T18:32:19.402Z"
+    "created_at": "2025-12-08T19:16:52.657Z",
+    "updated_at": "2025-12-08T19:16:52.657Z"
   }
 ]

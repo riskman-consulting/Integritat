@@ -6,7 +6,7 @@ async function seedDatabase() {
     console.log('🌱 Seeding database...');
 
     // Create admin user
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const hashedPassword = await bcrypt.hash('Admin@123', 10);
 
     await query(
       `INSERT INTO users (email, password_hash, first_name, last_name, role, department)
@@ -14,7 +14,7 @@ async function seedDatabase() {
       ['admin@integritat.com', hashedPassword, 'Admin', 'User', 'admin', 'Management']
     );
 
-    console.log('✅ Admin user created (email: admin@integritat.com, password: admin123)');
+    console.log('✅ Admin user created (email: admin@integritat.com, password: Admin@123)');
 
     // Create some sample team members
     const teamMembers = [
@@ -96,7 +96,7 @@ async function seedDatabase() {
     console.log('✅ Database seeding completed successfully!');
     console.log('\n📝 Login credentials:');
     console.log('   Email: admin@integritat.com');
-    console.log('   Password: admin123');
+    console.log('   Password: Admin@123');
 
   } catch (error) {
     console.error('❌ Seeding failed:', error);

@@ -3,7 +3,7 @@
 ## 🎯 System Overview
 RiskMan (Integritat) is an audit management system for tracking clients, projects, checklists, and documents.
 
-**Status:** ✅ Fully Functional | **Login:** admin@integritat.com / admin123
+**Status:** ✅ Fully Functional | **Login:** admin@integritat.com / Admin@123
 
 ---
 

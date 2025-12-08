@@ -60,7 +60,7 @@ const Login = () => {
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                placeholder="admin@integitat.com"
+                                placeholder="admin@integritat.com"
                                 required
                             />
                         </div>

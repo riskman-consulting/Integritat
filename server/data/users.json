@@ -1,62 +1,62 @@
 [
   {
-    "id": "2611c333-5519-4a3f-a258-2afed469952b",
+    "id": "37c547ef-7f25-4073-b4d9-329e0b058cce",
     "email": "admin@integritat.com",
-    "password_hash": "$2a$10$kz1/7rsQDI5ysuJB7rT3Yusl66RCodNiLKKoOthPcwZslcqCMGchO",
+    "password_hash": "$2a$10$ELP2/AOKGw3sEoFZkp4RZOc33wH3mADAqUBRKfxxicToxIPQ6hwna",
     "first_name": "Admin",
     "last_name": "User",
     "role": "admin",
     "department": "Management",
     "is_active": true,
-    "created_at": "2025-12-08T18:32:19.170Z",
-    "updated_at": "2025-12-08T18:32:19.171Z"
+    "created_at": "2025-12-08T19:16:52.410Z",
+    "updated_at": "2025-12-08T19:16:52.411Z"
   },
   {
-    "id": "167bc939-43a9-46f2-bf91-b7df7b5e3803",
+    "id": "0f6dc09d-78d4-4c59-be02-f34b51d7e8c0",
     "email": "john.doe@integritat.com",
-    "password_hash": "$2a$10$hWccI9HI8M9lRWNPjtjuK.u6x879iLmZGD8gbN0kUvG4yY7Z2bHxC",
+    "password_hash": "$2a$10$3RJYzIUvLfLlPhKNcnLHEeyPNu.ou7KXFwujAFfUaPllMLmPkh.ri",
     "first_name": "John",
     "last_name": "Doe",
     "role": "senior_auditor",
     "department": "Audit",
     "is_active": true,
-    "created_at": "2025-12-08T18:32:19.245Z",
-    "updated_at": "2025-12-08T18:32:19.245Z"
+    "created_at": "2025-12-08T19:16:52.492Z",
+    "updated_at": "2025-12-08T19:16:52.492Z"
   },
   {
-    "id": "40eeb81b-4174-4a36-8c35-63520423cac3",
+    "id": "efb20e57-61c1-41f1-b8dc-9f7dba1ee2df",
     "email": "jane.smith@integritat.com",
-    "password_hash": "$2a$10$g5vVCFPcQ4QP929yGe8JsO.Diqr8KEitSohgaf8QyMJbcDrxI65ES",
+    "password_hash": "$2a$10$FJH.IQdAKAV2v31nxcCimO95MxBeaZ.4Yf9LwpmwEQS22WSKFK53.",
     "first_name": "Jane",
     "last_name": "Smith",
     "role": "junior_auditor",
     "department": "Audit",
     "is_active": true,
-    "created_at": "2025-12-08T18:32:19.326Z",
-    "updated_at": "2025-12-08T18:32:19.326Z"
+    "created_at": "2025-12-08T19:16:52.573Z",
+    "updated_at": "2025-12-08T19:16:52.573Z"
   },
   {
-    "id": "51d6f031-fd2f-4993-9ef2-ed1a2a14482e",
+    "id": "baf73ce7-d150-4a99-a33d-d1ccee86c3ab",
     "email": "mike.johnson@integritat.com",
-    "password_hash": "$2a$10$7XslX3yQHK.LHT8tufNPruUcjwvCfZ47hc72bAwheXNSEfQhZGU5.",
+    "password_hash": "$2a$10$f2/GPa9r9ZGpu7sWKhI8g.83ubssH/BqUygltl6BjLRrCs7MFNmya",
     "first_name": "Mike",
     "last_name": "Johnson",
     "role": "partner",
     "department": "Management",
     "is_active": true,
-    "created_at": "2025-12-08T18:32:19.400Z",
-    "updated_at": "2025-12-08T18:32:19.400Z"
+    "created_at": "2025-12-08T19:16:52.656Z",
+    "updated_at": "2025-12-08T19:16:52.656Z"
   },
   {
-    "id": "386382e2-969e-4763-a1ca-e42539c0e73a",
+    "id": "2b1d48b7-b628-42f8-818f-f4707eaebabd",
     "email": "anirbandavid1@gmail.com",
-    "password_hash": "$2a$10$XTdlMNhxvisfI2m0BDay4u71nVTBiCvHttTskN8KwW0n.oQ9Knt8i",
+    "password_hash": "$2a$10$hb/JRFlq2vhz87lrmsanYeXULlm/0HhuT9E8t.AVo0V6lxo4Cn.la",
     "first_name": "Anirban",
     "last_name": "Biswas",
     "role": "junior_auditor",
     "department": "Audit",
     "is_active": true,
-    "created_at": "2025-12-08T18:34:04.847Z",
-    "updated_at": "2025-12-08T18:34:04.847Z"
+    "created_at": "2025-12-08T19:18:20.531Z",
+    "updated_at": "2025-12-08T19:18:20.531Z"
   }
 ]
