@@ -1,0 +1,62 @@
+[
+  {
+    "id": "2611c333-5519-4a3f-a258-2afed469952b",
+    "email": "admin@integritat.com",
+    "password_hash": "$2a$10$kz1/7rsQDI5ysuJB7rT3Yusl66RCodNiLKKoOthPcwZslcqCMGchO",
+    "first_name": "Admin",
+    "last_name": "User",
+    "role": "admin",
+    "department": "Management",
+    "is_active": true,
+    "created_at": "2025-12-08T18:32:19.170Z",
+    "updated_at": "2025-12-08T18:32:19.171Z"
+  },
+  {
+    "id": "167bc939-43a9-46f2-bf91-b7df7b5e3803",
+    "email": "john.doe@integritat.com",
+    "password_hash": "$2a$10$hWccI9HI8M9lRWNPjtjuK.u6x879iLmZGD8gbN0kUvG4yY7Z2bHxC",
+    "first_name": "John",
+    "last_name": "Doe",
+    "role": "senior_auditor",
+    "department": "Audit",
+    "is_active": true,
+    "created_at": "2025-12-08T18:32:19.245Z",
+    "updated_at": "2025-12-08T18:32:19.245Z"
+  },
+  {
+    "id": "40eeb81b-4174-4a36-8c35-63520423cac3",
+    "email": "jane.smith@integritat.com",
+    "password_hash": "$2a$10$g5vVCFPcQ4QP929yGe8JsO.Diqr8KEitSohgaf8QyMJbcDrxI65ES",
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "role": "junior_auditor",
+    "department": "Audit",
+    "is_active": true,
+    "created_at": "2025-12-08T18:32:19.326Z",
+    "updated_at": "2025-12-08T18:32:19.326Z"
+  },
+  {
+    "id": "51d6f031-fd2f-4993-9ef2-ed1a2a14482e",
+    "email": "mike.johnson@integritat.com",
+    "password_hash": "$2a$10$7XslX3yQHK.LHT8tufNPruUcjwvCfZ47hc72bAwheXNSEfQhZGU5.",
+    "first_name": "Mike",
+    "last_name": "Johnson",
+    "role": "partner",
+    "department": "Management",
+    "is_active": true,
+    "created_at": "2025-12-08T18:32:19.400Z",
+    "updated_at": "2025-12-08T18:32:19.400Z"
+  },
+  {
+    "id": "386382e2-969e-4763-a1ca-e42539c0e73a",
+    "email": "anirbandavid1@gmail.com",
+    "password_hash": "$2a$10$XTdlMNhxvisfI2m0BDay4u71nVTBiCvHttTskN8KwW0n.oQ9Knt8i",
+    "first_name": "Anirban",
+    "last_name": "Biswas",
+    "role": "junior_auditor",
+    "department": "Audit",
+    "is_active": true,
+    "created_at": "2025-12-08T18:34:04.847Z",
+    "updated_at": "2025-12-08T18:34:04.847Z"
+  }
+]

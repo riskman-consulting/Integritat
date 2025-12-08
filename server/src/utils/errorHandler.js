@@ -1,35 +1,24 @@
-export const errorHandler = (err, req, res, next) => {
-  console.error(err);
+import { validationResult } from 'express-validator';
 
-  if (err.name === 'ValidationError') {
+export const validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
     return res.status(400).json({
       success: false,
-      message: 'Validation error',
-      errors: err.details
+      message: 'Validation failed',
+      errors: errors.array()
     });
   }
-
-  if (err.message.includes('Invalid') || err.message.includes('Unauthorized')) {
-    return res.status(401).json({
-      success: false,
-      message: err.message
-    });
-  }
-
-  if (err.message.includes('Not found') || err.message.includes('not exist')) {
-    return res.status(404).json({
-      success: false,
-      message: err.message
-    });
-  }
-
-  res.status(500).json({
-    success: false,
-    message: 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { error: err.message })
-  });
+  next();
 };
 
 export const asyncHandler = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
+  Promise.resolve(fn(req, res, next)).catch((error) => {
+    console.error('Error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  });
 };

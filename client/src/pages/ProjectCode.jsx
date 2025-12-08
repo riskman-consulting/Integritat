@@ -75,7 +75,7 @@ const ProjectCode = () => {
         fetchData();
         alert("Project created successfully!");
       }
-    } catch (err) {
+    } catch {
       alert("Failed to create project");
     }
   };
@@ -88,7 +88,7 @@ const ProjectCode = () => {
         fetchData();
         alert("Project deleted successfully!");
       }
-    } catch (err) {
+    } catch {
       alert("Failed to delete project");
     }
   };
@@ -99,7 +99,7 @@ const ProjectCode = () => {
       if (response.success) {
         fetchData();
       }
-    } catch (err) {
+    } catch {
       alert("Failed to update status");
     }
   };
@@ -180,9 +180,9 @@ const ProjectCode = () => {
                       value={project.status}
                       onChange={(e) => handleStatusChange(project.id, e.target.value)}
                       className={`text-xs font-semibold border rounded-lg px-2 py-1 ${project.status === 'Completed' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
-                          project.status === 'In Progress' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                            project.status === 'Planning' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                              'bg-purple-100 text-purple-700 border-purple-200'
+                        project.status === 'In Progress' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                          project.status === 'Planning' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                            'bg-purple-100 text-purple-700 border-purple-200'
                         }`}
                     >
                       <option value="Planning">Planning</option>

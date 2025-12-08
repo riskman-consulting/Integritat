@@ -22,7 +22,7 @@ const Login = () => {
             } else {
                 setError(response.message || "Invalid credentials. Please check your email and password.");
             }
-        } catch (err) {
+        } catch {
             setError("Unable to connect to server. Please check your connection and try again.");
         } finally {
             setIsLoading(false);
