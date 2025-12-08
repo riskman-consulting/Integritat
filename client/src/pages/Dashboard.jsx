@@ -1,379 +1,363 @@
-import { useState } from "react";
-import {
-  Users,
-  FileText,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Search,
-  Filter,
-  ArrowUpRight,
-  MoreVertical,
-  CheckSquare,
-  Calendar
-} from "lucide-react";
-
+﻿import { useState, useEffect } from "react";
+import { Users, FileText, Clock, CheckCircle, AlertCircle, Search, Filter, Plus, X, Trash2 } from "lucide-react";
 import DashboardCard from "../components/DashboardCard";
+import { dashboardAPI, projectAPI, authAPI } from "../utils/api";
 
 const Dashboard = () => {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [loading, setLoading] = useState(true);
 
-  // Updated Data: Project Activity
-  const projectData = [
-    {
-      project: "Statutory Audit FY 23-24",
-      company: "ZenTax Advisors",
-      lead: "Rahul Sen",
-      status: "In Progress",
-      due: "10 Jan",
-    },
-    {
-      project: "GST Filing Q3",
-      company: "BrightFinance LLP",
-      lead: "Mira Desai",
-      status: "Pending Docs",
-      due: "12 Jan",
-    },
-    {
-      project: "Internal Financial Controls",
-      company: "LedgerWorks",
-      lead: "Kunal Roy",
-      status: "Completed",
-      due: "-",
-    },
-    {
-      project: "Tax Audit",
-      company: "AuditPro India",
-      lead: "Aisha Sharma",
-      status: "Under Review",
-      due: "08 Jan",
-    },
-    {
-      project: "Forensic Audit",
-      company: "AuditMax LLP",
-      lead: "Rohan Mehta",
-      status: "In Progress",
-      due: "15 Jan",
-    },
-    {
-      project: "Stock Audit",
-      company: "FinServe Ltd",
-      lead: "Sana Kapoor",
-      status: "Completed",
-      due: "05 Jan",
-    },
-  ];
+  // Data states
+  const [summary, setSummary] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [teamWorkload, setTeamWorkload] = useState([]);
+  const [pendingTasks, setPendingTasks] = useState([]);
+  const [showAddTeamMember, setShowAddTeamMember] = useState(false);
 
-  const teamLeadData = [
-    { lead: "Rahul Sen", projects: 3 },
-    { lead: "Mira Desai", projects: 1 },
-    { lead: "Kunal Roy", projects: 0 },
-    { lead: "Aisha Sharma", projects: 2 },
-    { lead: "Rohan Mehta", projects: 0 },
-  ];
+  // Team member form
+  const [newMember, setNewMember] = useState({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    role: "junior_auditor",
+    department: "Audit"
+  });
 
-  // New Data: My Pending Tasks
-  const myTasks = [
-    { id: 1, title: "Review ZenTax Draft Report", due: "Today", priority: "High" },
-    { id: 2, title: "Approve Timesheets for Wk 42", due: "Tomorrow", priority: "Medium" },
-    { id: 3, title: "Client Meeting: AuditPro", due: "14 Jan", priority: "Medium" },
-    { id: 4, title: "Update Internal Compliance Docs", due: "Next Week", priority: "Low" },
-  ];
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-  const filteredProjects = projectData.filter(
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [summaryRes, projectsRes, teamRes, tasksRes] = await Promise.all([
+        dashboardAPI.getSummary(),
+        dashboardAPI.getActivity(),
+        dashboardAPI.getTeamWorkload(),
+        dashboardAPI.getPendingTasks()
+      ]);
+
+      if (summaryRes.success) setSummary(summaryRes.data);
+      if (projectsRes.success) setProjects(projectsRes.data);
+      if (teamRes.success) setTeamWorkload(teamRes.data);
+      if (tasksRes.success) setPendingTasks(tasksRes.data);
+    } catch (err) {
+      console.error("Failed to load dashboard data", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddTeamMember = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await authAPI.register(newMember);
+      if (response.success) {
+        setShowAddTeamMember(false);
+        setNewMember({
+          email: "",
+          password: "",
+          firstName: "",
+          lastName: "",
+          role: "junior_auditor",
+          department: "Audit"
+        });
+        fetchDashboardData();
+        alert("Team member added successfully!");
+      } else {
+        alert(response.message || "Failed to add team member");
+      }
+    } catch (err) {
+      alert("Error adding team member");
+    }
+  };
+
+  const handleDeleteProject = async (projectId) => {
+    if (!confirm("Are you sure you want to delete this project?")) return;
+    try {
+      const response = await projectAPI.delete(projectId);
+      if (response.success) {
+        fetchDashboardData();
+        alert("Project deleted successfully!");
+      }
+    } catch (err) {
+      alert("Failed to delete project");
+    }
+  };
+
+  const filteredProjects = projects.filter(
     (item) =>
-      (item.company.toLowerCase().includes(search.toLowerCase()) || 
-       item.project.toLowerCase().includes(search.toLowerCase())) &&
+      (item.client_name?.toLowerCase().includes(search.toLowerCase()) ||
+        item.project_code?.toLowerCase().includes(search.toLowerCase())) &&
       (filterStatus === "All" || item.status === filterStatus)
   );
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 space-y-8 font-sans text-slate-800 p-8">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-2">
-            Dashboard
-          </h1>
-          <p className="text-slate-600 text-lg">
-            Welcome back, here is your audit management summary.
-          </p>
-        </div>
-        <div className="flex items-center gap-3 px-6 py-3 bg-white rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm">
-          <Calendar size={18} className="text-blue-600" />
-          <span className="text-sm font-semibold text-slate-700">{new Date().toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}</span>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <p className="text-slate-500 text-sm mt-1">Welcome back, here is your audit management summary.</p>
       </div>
 
-      {/* Top Summary Cards */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <DashboardCard
           title="Total Projects"
-          value="42"
+          value={summary?.totalProjects || "0"}
           icon={<Users size={24} />}
-          className="bg-blue-50 text-blue-600"
+          className="bg-blue-100 text-blue-600"
         />
-
         <DashboardCard
           title="Pending Actions"
-          value="9"
+          value={summary?.pendingChecklists || "0"}
           icon={<FileText size={24} />}
-          className="bg-orange-50 text-orange-600"
+          className="bg-orange-100 text-orange-600"
         />
-
         <DashboardCard
           title="Completed"
-          value="33"
+          value={summary?.projectsByStatus?.Completed || "0"}
           icon={<CheckCircle size={24} />}
-          className="bg-emerald-50 text-emerald-600"
+          className="bg-emerald-100 text-emerald-600"
         />
-
         <DashboardCard
-          title="Critical Due"
-          value="4"
+          title="In Progress"
+          value={summary?.projectsByStatus?.["In Progress"] || "0"}
           icon={<AlertCircle size={24} />}
-          className="bg-red-50 text-red-600"
+          className="bg-purple-100 text-purple-600"
         />
       </div>
 
       {/* Alert Banner */}
-      <div className="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-lg flex items-start gap-4 shadow-sm">
-        <div className="p-2 bg-rose-100 rounded-full text-rose-600 mt-1">
-          <Clock size={20} />
+      {pendingTasks.length > 0 && (
+        <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-lg flex items-start gap-4">
+          <div className="p-2 bg-orange-100 rounded-full text-orange-600 mt-1">
+            <Clock size={20} />
+          </div>
+          <div>
+            <h3 className="font-bold text-orange-800">
+              Action Required: {pendingTasks.length} Tasks Pending
+            </h3>
+            <p className="text-sm text-orange-600 mt-1">
+              You have {pendingTasks.length} pending tasks that require your attention.
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-bold text-rose-800">
-            Action Required: 4 Deadlines Approaching
-          </h3>
-          <p className="text-sm text-rose-600 mt-1">
-            Filings for AuditPro India and 3 others must be completed by 6 PM to
-            avoid regulatory penalties.
-          </p>
-        </div>
-        <button className="ml-auto text-sm font-semibold text-rose-700 hover:text-rose-900 underline">
-          View Details
-        </button>
-      </div>
+      )}
 
-      {/* Main Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-        
-        {/* Left Column (2/3 width): Project Activity Table */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-fit">
-          <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h2 className="font-bold text-lg text-slate-800">
-              Project Activity
-            </h2>
-
-            {/* Search & Filter Controls */}
-            <div className="flex gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search project..."
-                  className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <div className="relative">
-                <select
-                  className="appearance-none pl-3 pr-8 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none cursor-pointer"
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                >
-                  <option value="All">All Status</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Pending Docs">Pending Docs</option>
-                  <option value="Completed">Completed</option>
-                </select>
-                <Filter
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                  size={12}
-                />
-              </div>
+      {/* Project Activity */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="font-bold text-lg text-slate-800">Project Activity</h2>
+          <div className="flex gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search project..."
+                className="w-full sm:w-48 pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="relative">
+              <select
+                className="appearance-none pl-3 pr-8 py-2 border bg-slate-50 border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white cursor-pointer"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="All">All Status</option>
+                <option value="Planning">Planning</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Under Review">Under Review</option>
+                <option value="Completed">Completed</option>
+              </select>
+              <Filter className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
             </div>
           </div>
+        </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider text-xs text-center font-semibold">
+        <div className="overflow-x-auto max-h-96 overflow-y-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider text-xs font-semibold sticky top-0">
+              <tr>
+                <th className="px-6 py-3">Project Code</th>
+                <th className="px-6 py-3">Client</th>
+                <th className="px-6 py-3">Team Lead</th>
+                <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-3">Progress</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredProjects.length === 0 ? (
                 <tr>
-                  <th className="px-6 py-4">Project Name</th>
-                  <th className="px-6 py-4">Company</th>
-                  <th className="px-6 py-4">Lead</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Deadline</th>
-                  <th className="px-4 py-4"></th>
+                  <td colSpan="6" className="px-6 py-8 text-center text-slate-500">
+                    No projects found
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredProjects.map((item, i) => (
-                  <tr
-                    key={i}
-                    className="hover:bg-slate-50 transition-colors group"
-                  >
-                    <td className="px-6 py-4 font-semibold text-slate-800">
-                      {item.project}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {item.company}
+              ) : (
+                filteredProjects.map((project) => (
+                  <tr key={project.project_code} className="hover:bg-slate-50 transition-colors group">
+                    <td className="px-6 py-4 font-semibold text-slate-800">{project.project_code}</td>
+                    <td className="px-6 py-4 text-slate-600">{project.client_name}</td>
+                    <td className="px-6 py-4 text-slate-600">{project.team_lead || "Unassigned"}</td>
+                    <td className="px-6 py-4">
+                      <span className={`text-xs px-2 py-1 rounded-full font-semibold ${project.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
+                        project.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                          project.status === 'Planning' ? 'bg-amber-100 text-amber-700' :
+                            'bg-purple-100 text-purple-700'
+                        }`}>
+                        {project.status}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <Avatar seed={item.lead} />
-                        <span className="text-slate-600 text-xs">{item.lead}</span>
+                        <div className="flex-1 bg-slate-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all"
+                            style={{
+                              width: `${project.total_checklists > 0
+                                ? (project.completed_checklists / project.total_checklists) * 100
+                                : 0}%`
+                            }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-slate-500 font-mono">
+                          {project.completed_checklists || 0}/{project.total_checklists || 0}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-8 py-4">
-                      <StatusBadge status={item.status} />
-                    </td>
-                    <td className="px-3 py-4 text-right font-mono text-slate-500">
-                      {item.due}
-                    </td>
                     <td className="px-4 py-4 text-right">
-                      <button className="text-slate-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreVertical size={16} />
+                      <button
+                        onClick={() => handleDeleteProject(project.id)}
+                        className="text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 size={16} />
                       </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="p-4 border-t border-slate-100 text-center">
-            <button className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1 mx-auto">
-              View All Projects <ArrowUpRight size={16} />
-            </button>
-          </div>
-        </div>
-
-        {/* Right Column (1/3 width): Sidebar Widgets */}
-        <div className="space-y-8 w-full grid grid-cols-2 gap-4">
-            
-            {/* NEW: My Pending Tasks Section */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
-                <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-                    <h2 className="font-bold text-lg text-slate-800">My Pending Tasks</h2>
-                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-semibold">{myTasks.length}</span>
-                </div>
-                <div className="divide-y divide-slate-50">
-                    {myTasks.map((task) => (
-                        <div key={task.id} className="p-4 hover:bg-slate-50 transition flex items-start gap-3">
-                            <div className="mt-1 text-slate-400">
-                                <CheckSquare size={16} />
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-sm font-medium text-slate-800">{task.title}</p>
-                                <div className="flex items-center justify-between mt-2">
-                                    <span className={`text-[10px] px-2 py-0.5 rounded border uppercase tracking-wider font-semibold
-                                        ${task.priority === 'High' ? 'bg-red-50 text-red-600 border-red-100' : 
-                                          task.priority === 'Medium' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                                          'bg-blue-50 text-blue-600 border-blue-100'}`}>
-                                        {task.priority}
-                                    </span>
-                                    <span className="text-xs text-slate-400">{task.due}</span>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                <button className="w-full py-3 text-sm text-slate-500 hover:text-blue-600 border-t border-slate-100 transition">
-                    + Add Personal Task
-                </button>
-            </div>
-
-            {/* Team Lead Stats */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
-            <div className="p-5 border-b border-slate-100">
-                <h2 className="font-bold text-lg text-slate-800">Team Workload</h2>
-            </div>
-            <div className="p-2">
-                <table className="w-full text-sm">
-                <thead className="text-xs text-slate-500 bg-slate-50 uppercase">
-                    <tr>
-                    <th className="px-4 py-3 text-left">Member</th>
-                    <th className="px-4 py-3 text-center">Active</th>
-                    <th className="px-4 py-3 text-right">Status</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                    {teamLeadData.map((lead, i) => (
-                    <tr key={i} className="hover:bg-slate-50">
-                        <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                            <div
-                            className={`w-2 h-2 rounded-full ${
-                                lead.projects > 0 ? "bg-green-500" : "bg-slate-300"
-                            }`}
-                            ></div>
-                            <span className="font-medium text-slate-700 text-xs">
-                            {lead.lead}
-                            </span>
-                        </div>
-                        </td>
-                        <td className="px-4 py-3 text-center font-bold text-slate-600">
-                        {lead.projects}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                        <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full ${
-                            lead.projects === 0
-                                ? "bg-slate-100 text-slate-500"
-                                : "bg-green-100 text-green-700"
-                            }`}
-                        >
-                            {lead.projects === 0 ? "Idle" : "Active"}
-                        </span>
-                        </td>
-                    </tr>
-                    ))}
-                </tbody>
-                </table>
-            </div>
-            </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
-  );
-};
 
-/* --- UI COMPONENTS --- */
+      {/* Bottom Grid: Pending Tasks & Team Workload */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Pending Tasks */}
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+          <div className="p-4 border-b border-slate-100 flex justify-between items-center">
+            <h2 className="font-bold text-lg text-slate-800">My Pending Tasks</h2>
+            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-semibold">
+              {pendingTasks.length}
+            </span>
+          </div>
+          <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+            {pendingTasks.length === 0 ? (
+              <div className="p-8 text-center text-slate-500">No pending tasks</div>
+            ) : (
+              pendingTasks.map((task) => (
+                <div key={task.id} className="p-4 hover:bg-slate-50 transition">
+                  <p className="text-sm font-medium text-slate-800">{task.title}</p>
+                  <p className="text-xs text-slate-500 mt-1">{task.project_code}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
 
-const StatusBadge = ({ status }) => {
-  let styles = "bg-slate-100 text-slate-600";
-  if (status === "Completed")
-    styles = "bg-emerald-100 text-emerald-700 border border-emerald-200";
-  if (status === "In Progress")
-    styles = "bg-blue-100 text-blue-700 border border-blue-200";
-  if (status === "Pending Docs")
-    styles = "bg-amber-100 text-amber-700 border border-amber-200";
-  if (status === "Under Review")
-    styles = "bg-purple-100 text-purple-700 border border-purple-200";
+        {/* Team Workload */}
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+          <div className="p-4 border-b border-slate-100 flex justify-between items-center">
+            <h2 className="font-bold text-lg text-slate-800">Team Workload</h2>
+            <button
+              onClick={() => setShowAddTeamMember(true)}
+              className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
+            >
+              <Plus size={14} />
+              Add Member
+            </button>
+          </div>
+          <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+            {teamWorkload.length === 0 ? (
+              <div className="p-8 text-center text-slate-500">No team members</div>
+            ) : (
+              teamWorkload.map((member) => (
+                <div key={member.user_id} className="p-4 hover:bg-slate-50 transition">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">
+                        {member.first_name} {member.last_name}
+                      </p>
+                      <p className="text-xs text-slate-500">{member.role?.replace(/_/g, ' ')}</p>
+                    </div>
+                    <span className="text-sm font-bold text-blue-600">{member.active_projects || 0} projects</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
 
-  return (
-    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles}`}>
-      {status}
-    </span>
-  );
-};
-
-// Generates a simple colored circle with initials
-const Avatar = ({ seed }) => {
-  const initials = seed
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .substring(0, 2);
-  return (
-    <div className="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-      {initials}
+      {/* Add Team Member Modal */}
+      {showAddTeamMember && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="border-b border-slate-100 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-slate-800">Add Team Member</h2>
+              <button onClick={() => setShowAddTeamMember(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleAddTeamMember} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">First Name *</label>
+                  <input type="text" required className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value={newMember.firstName} onChange={(e) => setNewMember({ ...newMember, firstName: e.target.value })} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Last Name *</label>
+                  <input type="text" required className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value={newMember.lastName} onChange={(e) => setNewMember({ ...newMember, lastName: e.target.value })} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                <input type="email" required className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value={newMember.email} onChange={(e) => setNewMember({ ...newMember, email: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Password *</label>
+                <input type="password" required className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value={newMember.password} onChange={(e) => setNewMember({ ...newMember, password: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Role *</label>
+                <select required className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value={newMember.role} onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}>
+                  <option value="junior_auditor">Junior Auditor</option>
+                  <option value="senior_auditor">Senior Auditor</option>
+                  <option value="manager">Manager</option>
+                  <option value="partner">Partner</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button type="button" onClick={() => setShowAddTeamMember(false)} className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Add Member</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

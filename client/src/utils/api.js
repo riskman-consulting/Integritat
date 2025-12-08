@@ -100,6 +100,22 @@ export const authAPI = {
     return res.json();
   },
 
+  updateProfile: async (profileData) => {
+    const res = await apiCall('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData)
+    });
+    return res.json();
+  },
+
+  changePassword: async (passwordData) => {
+    const res = await apiCall('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(passwordData)
+    });
+    return res.json();
+  },
+
   logout: () => {
     clearTokens();
   }
