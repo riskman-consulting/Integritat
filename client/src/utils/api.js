@@ -35,7 +35,7 @@ const refreshAccessToken = async () => {
       window.location.href = '/';
       return null;
     }
-  } catch (error) {
+  } catch {
     clearTokens();
     window.location.href = '/';
     return null;

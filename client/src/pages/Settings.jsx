@@ -62,7 +62,7 @@ const Settings = () => {
       } else {
         setMessage({ type: "error", text: response.message || "Failed to update profile" });
       }
-    } catch (err) {
+    } catch {
       setMessage({ type: "error", text: "Failed to update profile" });
     }
     setTimeout(() => setMessage({ type: "", text: "" }), 3000);
@@ -99,7 +99,7 @@ const Settings = () => {
       } else {
         setMessage({ type: "error", text: response.message || "Failed to change password" });
       }
-    } catch (err) {
+    } catch {
       setMessage({ type: "error", text: "Failed to change password" });
     }
     setTimeout(() => setMessage({ type: "", text: "" }), 3000);
@@ -124,7 +124,7 @@ const Settings = () => {
       {/* Message */}
       {message.text && (
         <div className={`p-4 rounded-lg ${message.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
-            "bg-red-50 text-red-700 border border-red-200"
+          "bg-red-50 text-red-700 border border-red-200"
           }`}>
           {message.text}
         </div>

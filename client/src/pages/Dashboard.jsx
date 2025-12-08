@@ -69,7 +69,7 @@ const Dashboard = () => {
       } else {
         alert(response.message || "Failed to add team member");
       }
-    } catch (err) {
+    } catch {
       alert("Error adding team member");
     }
   };
@@ -82,7 +82,7 @@ const Dashboard = () => {
         fetchDashboardData();
         alert("Project deleted successfully!");
       }
-    } catch (err) {
+    } catch {
       alert("Failed to delete project");
     }
   };

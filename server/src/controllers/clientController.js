@@ -3,7 +3,7 @@ import { asyncHandler } from '../utils/errorHandler.js';
 
 export const getAllClients = asyncHandler(async (req, res) => {
   const result = await query('SELECT * FROM clients ORDER BY created_at DESC');
-  
+
   res.json({
     success: true,
     data: result.rows
@@ -12,9 +12,9 @@ export const getAllClients = asyncHandler(async (req, res) => {
 
 export const getClientById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const result = await query('SELECT * FROM clients WHERE id = $1', [id]);
-  
+
   if (result.rows.length === 0) {
     return res.status(404).json({
       success: false,
@@ -30,31 +30,36 @@ export const getClientById = asyncHandler(async (req, res) => {
 
 export const createClient = asyncHandler(async (req, res) => {
   const {
-    clientCode, legalName, entityType, addressLine1, addressLine2,
-    city, state, country, zipCode, incorporationDate, businessNature,
-    taxId, contactName, contactEmail, contactPhone
+    legalName, entityType, addressLine1, addressLine2,
+    city, state, country, zipCode, incDate, businessNature,
+    taxId, contactName, contactEmail, contactPhone,
+    priorAuditor, files
   } = req.body;
 
-  // Check if client code exists
-  const existing = await query('SELECT id FROM clients WHERE client_code = $1', [clientCode]);
-  if (existing.rows.length > 0) {
-    return res.status(400).json({
-      success: false,
-      message: 'Client code already exists'
-    });
+  // Generate client code (simple logic for now, could be improved)
+  // In a real app, this might come from a sequence in DB
+  const lastClient = await query('SELECT client_code FROM clients ORDER BY created_at DESC LIMIT 1');
+  let nextCode = 1001;
+  if (lastClient.rows.length > 0) {
+    const lastCodeStr = lastClient.rows[0].client_code;
+    const lastNum = parseInt(lastCodeStr.split('-')[1]);
+    if (!isNaN(lastNum)) {
+      nextCode = lastNum + 1;
+    }
   }
+  const clientCode = `CL-${nextCode}`;
 
   const result = await query(
     `INSERT INTO clients (
       client_code, legal_name, entity_type, address_line1, address_line2,
       city, state, country, zip_code, incorporation_date, business_nature,
-      tax_id, contact_name, contact_email, contact_phone
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      tax_id, contact_name, contact_email, contact_phone, prior_auditor, documents
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
     RETURNING *`,
     [
       clientCode, legalName, entityType, addressLine1, addressLine2,
-      city, state, country, zipCode, incorporationDate, businessNature,
-      taxId, contactName, contactEmail, contactPhone
+      city, state, country, zipCode, incDate, businessNature,
+      taxId, contactName, contactEmail, contactPhone, priorAuditor, JSON.stringify(files)
     ]
   );
 
@@ -104,7 +109,7 @@ export const updateClient = asyncHandler(async (req, res) => {
   values.push(id);
 
   const updateQuery = `UPDATE clients SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`;
-  
+
   const result = await query(updateQuery, values);
 
   res.json({

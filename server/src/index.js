@@ -12,9 +12,6 @@ import checklistRoutes from './routes/checklistRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 
-// Import error handler
-import { errorHandler } from './utils/errorHandler.js';
-
 // Load environment variables
 dotenv.config();
 
@@ -58,9 +55,6 @@ app.use((req, res) => {
     message: 'Route not found'
   });
 });
-
-// Error handling middleware (must be last)
-app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {

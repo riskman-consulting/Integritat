@@ -1,119 +1,105 @@
 import bcrypt from 'bcryptjs';
-import pool from './connection.js';
-import { v4 as uuidv4 } from 'uuid';
+import { query } from './connection.js';
 
 async function seedDatabase() {
   try {
-    console.log('🌱 Seeding database with sample data...');
+    console.log('🌱 Seeding database...');
 
     // Create admin user
-    const adminPassword = await bcrypt.hash('admin@123', 10);
-    const adminId = uuidv4();
-    
-    await pool.query(
-      `INSERT INTO users (id, email, password_hash, first_name, last_name, role, department, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [adminId, 'admin@integritat.com', adminPassword, 'Admin', 'User', 'admin', 'Management', true]
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+
+    await query(
+      `INSERT INTO users (email, password_hash, first_name, last_name, role, department)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      ['admin@integritat.com', hashedPassword, 'Admin', 'User', 'admin', 'Management']
     );
 
-    // Create sample auditors
-    const auditorPassword = await bcrypt.hash('auditor@123', 10);
-    const auditorIds = [];
-    
-    const auditors = [
-      { email: 'rahul.sen@integritat.com', first: 'Rahul', last: 'Sen', role: 'senior_auditor' },
-      { email: 'mira.desai@integritat.com', first: 'Mira', last: 'Desai', role: 'senior_auditor' },
-      { email: 'kunal.roy@integritat.com', first: 'Kunal', last: 'Roy', role: 'junior_auditor' },
-      { email: 'aisha.sharma@integritat.com', first: 'Aisha', last: 'Sharma', role: 'senior_auditor' },
+    console.log('✅ Admin user created (email: admin@integritat.com, password: admin123)');
+
+    // Create some sample team members
+    const teamMembers = [
+      { email: 'john.doe@integritat.com', firstName: 'John', lastName: 'Doe', role: 'senior_auditor', department: 'Audit' },
+      { email: 'jane.smith@integritat.com', firstName: 'Jane', lastName: 'Smith', role: 'junior_auditor', department: 'Audit' },
+      { email: 'mike.johnson@integritat.com', firstName: 'Mike', lastName: 'Johnson', role: 'partner', department: 'Management' }
     ];
 
-    for (const auditor of auditors) {
-      const id = uuidv4();
-      auditorIds.push(id);
-      await pool.query(
-        `INSERT INTO users (id, email, password_hash, first_name, last_name, role, department, is_active)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [id, auditor.email, auditorPassword, auditor.first, auditor.last, auditor.role, 'Audit', true]
+    for (const member of teamMembers) {
+      const memberPassword = await bcrypt.hash('password123', 10);
+      await query(
+        `INSERT INTO users (email, password_hash, first_name, last_name, role, department)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [member.email, memberPassword, member.firstName, member.lastName, member.role, member.department]
       );
     }
 
+    console.log('✅ Team members created');
+
     // Create sample clients
-    const clients = [
+    const sampleClients = [
       {
         code: 'CL-1001',
-        name: 'ABC Corp Pvt Ltd',
-        type: 'Public',
-        city: 'Mumbai',
-        contact: 'Rohan Mehta',
-        email: 'rohan@abc.com'
+        name: 'Acme Corporation Ltd.',
+        entityType: 'Public',
+        city: 'New York',
+        state: 'NY',
+        country: 'United States',
+        zipCode: '10001',
+        contactName: 'Robert Smith',
+        contactEmail: 'robert@acmecorp.com',
+        contactPhone: '+1-555-0101',
+        taxId: 'EIN-12-3456789'
       },
       {
         code: 'CL-1002',
-        name: 'XYZ Business Solutions',
-        type: 'Non-Public',
-        city: 'Delhi',
-        contact: 'Sneha Kapoor',
-        email: 'sneha@xyz.com'
+        name: 'TechStart Innovations Inc.',
+        entityType: 'Non-Public',
+        city: 'San Francisco',
+        state: 'CA',
+        country: 'United States',
+        zipCode: '94102',
+        contactName: 'Sarah Johnson',
+        contactEmail: 'sarah@techstart.com',
+        contactPhone: '+1-555-0102',
+        taxId: 'EIN-98-7654321'
       },
       {
         code: 'CL-1003',
-        name: 'Delta Finance Group',
-        type: 'Public',
-        city: 'Bangalore',
-        contact: 'Arjun Patel',
-        email: 'arjun@delta.com'
-      },
+        name: 'Global Manufacturing Co.',
+        entityType: 'Public',
+        city: 'Chicago',
+        state: 'IL',
+        country: 'United States',
+        zipCode: '60601',
+        contactName: 'Michael Chen',
+        contactEmail: 'mchen@globalmanuf.com',
+        contactPhone: '+1-555-0103',
+        taxId: 'EIN-45-6789012'
+      }
     ];
 
-    const clientIds = [];
-    for (const client of clients) {
-      const id = uuidv4();
-      clientIds.push(id);
-      await pool.query(
-        `INSERT INTO clients (id, client_code, legal_name, entity_type, city, contact_name, contact_email, status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [id, client.code, client.name, client.type, client.city, client.contact, client.email, 'Active']
+    for (const client of sampleClients) {
+      await query(
+        `INSERT INTO clients (
+          client_code, legal_name, entity_type, address_line1, address_line2,
+          city, state, country, zip_code, incorporation_date, business_nature,
+          tax_id, contact_name, contact_email, contact_phone
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+        [
+          client.code, client.name, client.entityType, '123 Business Street', 'Suite 100',
+          client.city, client.state, client.country, client.zipCode, null, 'Professional Services',
+          client.taxId, client.contactName, client.contactEmail, client.contactPhone
+        ]
       );
     }
 
-    // Create sample projects
-    const projects = [
-      {
-        code: 'PROJ-001',
-        clientId: clientIds[0],
-        type: 'Statutory Audit',
-        period: 'FY 2024-25',
-        lead: auditorIds[0]
-      },
-      {
-        code: 'PROJ-002',
-        clientId: clientIds[1],
-        type: 'Tax Audit',
-        period: 'FY 2024-25',
-        lead: auditorIds[1]
-      },
-      {
-        code: 'PROJ-003',
-        clientId: clientIds[2],
-        type: 'Internal Audit',
-        period: 'Q1 2025',
-        lead: auditorIds[2]
-      },
-    ];
+    console.log('✅ Sample clients created');
+    console.log('✅ Database seeding completed successfully!');
+    console.log('\n📝 Login credentials:');
+    console.log('   Email: admin@integritat.com');
+    console.log('   Password: admin123');
 
-    for (const project of projects) {
-      await pool.query(
-        `INSERT INTO projects (project_code, client_id, project_type, period, team_lead_id, status)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [project.code, project.clientId, project.type, project.period, project.lead, 'In Progress']
-      );
-    }
-
-    console.log('✅ Database seeded successfully!');
-    process.exit(0);
   } catch (error) {
     console.error('❌ Seeding failed:', error);
-    process.exit(1);
   }
 }
 

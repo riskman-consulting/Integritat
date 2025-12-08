@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS clients (
   contact_name VARCHAR(100),
   contact_email VARCHAR(255),
   contact_phone VARCHAR(20),
+  prior_auditor TEXT,
+  documents JSONB,
   status VARCHAR(50) DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive', 'On-Hold')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
