@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Trash2, X } from "lucide-react";
+import { useToast } from "../components/Toast";
 import { projectAPI, clientAPI, dashboardAPI } from "../utils/api";
 
 const ProjectCode = () => {
+  const toast = useToast();
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
@@ -57,9 +59,13 @@ const ProjectCode = () => {
       const projectCode = generateProjectCode(selectedClient.client_code, formData.projectType);
 
       const response = await projectAPI.create({
-        ...formData,
         projectCode,
-        clientId: parseInt(formData.clientId)
+        clientId: parseInt(formData.clientId),
+        projectType: formData.projectType,
+        period: formData.period,
+        completionDate: formData.completionDate,
+        projectValue: parseFloat(formData.projectValue) || 0,
+        teamLeadId: formData.teamLead ? parseInt(formData.teamLead) : null
       });
 
       if (response.success) {
@@ -73,10 +79,11 @@ const ProjectCode = () => {
           teamLead: ""
         });
         fetchData();
-        alert("Project created successfully!");
+        toast.success("Project created successfully!");
       }
-    } catch {
-      alert("Failed to create project");
+    } catch (error) {
+      console.error("Project creation error:", error);
+      toast.error("Failed to create project: " + (error.message || "Unknown error"));
     }
   };
 
@@ -86,10 +93,10 @@ const ProjectCode = () => {
       const response = await projectAPI.delete(projectId);
       if (response.success) {
         fetchData();
-        alert("Project deleted successfully!");
+        toast.success("Project deleted successfully!");
       }
     } catch {
-      alert("Failed to delete project");
+      toast.error("Failed to delete project");
     }
   };
 
