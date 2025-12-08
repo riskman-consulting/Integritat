@@ -295,7 +295,7 @@ const Clients = () => {
 
             {/* Modal Body */}
             <div className="p-8">
-              <form className="space-y-8" onSubmit={addClient}>
+              <form id="addClientForm" className="space-y-8" onSubmit={addClient}>
                 
                 {/* SECTION 1: Client Identification */}
                 <SectionWrapper title="Client Identification" icon={<Building2 size={20} />}>
@@ -513,7 +513,8 @@ const Clients = () => {
                 Cancel
               </button>
               <button 
-                onClick={addClient}
+                type="submit"
+                form="addClientForm"
                 className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-lg shadow-blue-200 transition-all active:scale-95"
               >
                 Create Client

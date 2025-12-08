@@ -89,26 +89,24 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 space-y-6 font-sans text-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 space-y-8 font-sans text-slate-800 p-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Overview
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-2">
+            Dashboard
           </h1>
-          <p className="text-slate-500 mt-1">
-            Welcome back, here is your project summary for today.
+          <p className="text-slate-600 text-lg">
+            Welcome back, here is your audit management summary.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-slate-500 bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2">
-            <Calendar size={16} />
-            {new Date().toLocaleDateString("en-GB", {
+        <div className="flex items-center gap-3 px-6 py-3 bg-white rounded-xl border border-slate-200 shadow-sm backdrop-blur-sm">
+          <Calendar size={18} className="text-blue-600" />
+          <span className="text-sm font-semibold text-slate-700">{new Date().toLocaleDateString("en-GB", {
               day: "numeric",
               month: "short",
               year: "numeric",
-            })}
-          </span>
+            })}</span>
         </div>
       </div>
 
