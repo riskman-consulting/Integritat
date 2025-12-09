@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Trash2, X } from "lucide-react";
+import { Plus, Search, Trash2, X, Eye, Upload, FileText, Download } from "lucide-react";
 import { useToast } from "../components/Toast";
-import { projectAPI, clientAPI, dashboardAPI } from "../utils/api";
+import { projectAPI, clientAPI, dashboardAPI, documentAPI } from "../utils/api";
 
 const ProjectCode = () => {
   const toast = useToast();
@@ -11,6 +11,10 @@ const ProjectCode = () => {
   const [clients, setClients] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     clientId: "",
@@ -55,17 +59,29 @@ const ProjectCode = () => {
   const handleCreateProject = async (e) => {
     e.preventDefault();
     try {
-      const selectedClient = clients.find(c => c.id === parseInt(formData.clientId));
+      // Client IDs are UUIDs (strings), so compare as strings
+      const selectedClient = clients.find(c => c.id === formData.clientId);
+
+      if (!selectedClient) {
+        toast.error("Please select a valid client");
+        return;
+      }
+
+      if (!selectedClient.client_code) {
+        toast.error("Selected client is missing client code");
+        return;
+      }
+
       const projectCode = generateProjectCode(selectedClient.client_code, formData.projectType);
 
       const response = await projectAPI.create({
         projectCode,
-        clientId: parseInt(formData.clientId),
+        clientId: formData.clientId, // Send as string (UUID)
         projectType: formData.projectType,
         period: formData.period,
         completionDate: formData.completionDate,
         projectValue: parseFloat(formData.projectValue) || 0,
-        teamLeadId: formData.teamLead ? parseInt(formData.teamLead) : null
+        teamLeadId: formData.teamLead || null // Send as string or null
       });
 
       if (response.success) {
@@ -109,6 +125,74 @@ const ProjectCode = () => {
     } catch {
       alert("Failed to update status");
     }
+  };
+
+  const handleViewDocuments = async (project) => {
+    setSelectedProject(project);
+    setIsDocModalOpen(true);
+    await fetchDocuments(project.id);
+  };
+
+  const fetchDocuments = async (projectId) => {
+    try {
+      const response = await documentAPI.getByProject(projectId);
+      if (response.success) {
+        setDocuments(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch documents:", error);
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file size (50MB max)
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("File size must be less than 50MB");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const response = await documentAPI.upload(file, selectedProject.id);
+
+      if (response.success) {
+        toast.success("Document uploaded successfully!");
+        await fetchDocuments(selectedProject.id);
+        e.target.value = ''; // Reset file input
+      } else {
+        toast.error(response.message || "Failed to upload document");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload document");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteDocument = async (docId) => {
+    if (!confirm("Are you sure you want to delete this document?")) return;
+
+    try {
+      const response = await documentAPI.delete(docId);
+      if (response.success) {
+        toast.success("Document deleted successfully!");
+        await fetchDocuments(selectedProject.id);
+      }
+    } catch (error) {
+      toast.error("Failed to delete document");
+    }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
   const filtered = projects.filter(p =>
@@ -179,9 +263,9 @@ const ProjectCode = () => {
                 <tr key={project.id} className="hover:bg-slate-50 transition duration-150">
                   <td className="p-4 font-mono text-xs font-bold text-blue-600">{project.project_code}</td>
                   <td className="p-4 font-semibold text-slate-800">{project.client_name}</td>
-                  <td className="p-4 text-slate-600">{project.project_type}</td>
-                  <td className="p-4 text-slate-600">{project.period}</td>
-                  <td className="p-4 text-slate-600">{project.team_lead || "Unassigned"}</td>
+                  <td className="p-4 text-slate-600">{project.project_type || 'N/A'}</td>
+                  <td className="p-4 text-slate-600">{project.period || 'N/A'}</td>
+                  <td className="p-4 text-slate-600">{project.team_lead_name || "Unassigned"}</td>
                   <td className="p-4">
                     <select
                       value={project.status}
@@ -199,8 +283,19 @@ const ProjectCode = () => {
                     </select>
                   </td>
                   <td className="p-4">
-                    <div className="flex items-center justify-center">
-                      <button onClick={() => handleDeleteProject(project.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => handleViewDocuments(project)}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        title="View Documents"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProject(project.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        title="Delete"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -260,7 +355,7 @@ const ProjectCode = () => {
                   <select className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.teamLead} onChange={(e) => setFormData({ ...formData, teamLead: e.target.value })}>
                     <option value="">Select Team Lead</option>
                     {teamMembers.map(m => (
-                      <option key={m.user_id} value={`${m.first_name} ${m.last_name}`}>{m.first_name} {m.last_name}</option>
+                      <option key={m.user_id} value={m.user_id}>{m.first_name} {m.last_name}</option>
                     ))}
                   </select>
                 </div>
@@ -270,6 +365,178 @@ const ProjectCode = () => {
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Create Project</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Document Management Modal */}
+      {isDocModalOpen && selectedProject && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="border-b border-slate-100 px-6 py-4 flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Project Documents</h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  {selectedProject.project_code} - {selectedProject.client_name}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setIsDocModalOpen(false);
+                  setSelectedProject(null);
+                  setDocuments([]);
+                }}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Upload Section */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-dashed border-blue-300 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-600 rounded-lg">
+                      <Upload className="text-white" size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">Upload Documents</h3>
+                      <p className="text-sm text-slate-600">PDF, Word, Excel, Images (Max 50MB)</p>
+                    </div>
+                  </div>
+                </div>
+                <label className="block">
+                  <input
+                    type="file"
+                    onChange={handleFileUpload}
+                    disabled={uploading}
+                    className="block w-full text-sm text-slate-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-lg file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-blue-600 file:text-white
+                      hover:file:bg-blue-700
+                      file:cursor-pointer cursor-pointer
+                      disabled:opacity-50 disabled:cursor-not-allowed"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip"
+                  />
+                </label>
+                {uploading && (
+                  <div className="mt-3 flex items-center gap-2 text-blue-600">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm font-medium">Uploading...</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Documents List */}
+              <div>
+                <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                  <FileText size={18} />
+                  Uploaded Documents ({documents.length})
+                </h3>
+
+                {documents.length === 0 ? (
+                  <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-200">
+                    <FileText className="mx-auto text-slate-300 mb-3" size={48} />
+                    <p className="text-slate-500 font-medium">No documents uploaded yet</p>
+                    <p className="text-sm text-slate-400 mt-1">Upload your first document to get started</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {documents.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-lg hover:border-blue-300 hover:shadow-sm transition-all group"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <FileText className="text-blue-600" size={20} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-slate-800 truncate">{doc.file_name}</p>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-xs text-slate-500">
+                                {formatFileSize(doc.file_size)}
+                              </span>
+                              <span className="text-xs text-slate-400">•</span>
+                              <span className="text-xs text-slate-500">
+                                {new Date(doc.upload_date || doc.created_at).toLocaleDateString()}
+                              </span>
+                              {doc.uploaded_by_name && (
+                                <>
+                                  <span className="text-xs text-slate-400">•</span>
+                                  <span className="text-xs text-slate-500">
+                                    by {doc.uploaded_by_name}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`http://localhost:5000/uploads/${doc.file_key}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                            title="Download"
+                          >
+                            <Download size={16} />
+                          </a>
+                          <button
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Azure Storage Info */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-purple-600 rounded-lg">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M3.28 6.65L11 10.47v10.05l-7.72-3.82V6.65zM13 20.52V10.47l7.72-3.82v10.05L13 20.52zM12 8.43L4.28 4.61 12 .79l7.72 3.82L12 8.43z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-purple-900">Azure Cloud Storage Ready</p>
+                    <p className="text-xs text-purple-700 mt-1">
+                      Documents are currently stored locally. Azure Blob Storage integration is configured and ready for production deployment.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-slate-100 px-6 py-4 bg-slate-50">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-slate-600">
+                  Storage: <span className="font-semibold">Project-{selectedProject.id.slice(0, 8)}/</span>
+                </p>
+                <button
+                  onClick={() => {
+                    setIsDocModalOpen(false);
+                    setSelectedProject(null);
+                    setDocuments([]);
+                  }}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

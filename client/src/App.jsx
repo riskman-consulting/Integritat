@@ -7,6 +7,8 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import DocUpload from "./pages/DocumentUpload";
 import ProjectCode from "./pages/ProjectCode";
+import Audit from "./pages/Audit";
+import AuditDocs from "./pages/AuditDocs";
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="clients" element={<Clients />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="audit" element={<Audit />} />
+          <Route path="auditdoc" element={<AuditDocs />} />
         </Route>
       </Routes>
     </ToastProvider>

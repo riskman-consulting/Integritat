@@ -19,13 +19,13 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 h-screen bg-white text-slate-600 flex flex-col border-r border-slate-200 shadow-sm">
+    <div className="w-60 h-screen bg-white text-slate-600 flex flex-col border-r border-slate-200 shadow-sm">
 
       {/* BRAND HEADER */}
       <div className="h-16 flex items-center px-6 border-b border-slate-200">
         <div className="flex items-center gap-3 w-full">
-          <img src={logo} alt="Integritat" className="h-8 w-auto" />
-          <h1 className="text-lg font-bold text-slate-800">Integritat</h1>
+          <img src={logo} alt="Integritat" className="h-12 w-auto" />
+          <h1 className="text-xl font-bold text-slate-800">Integritat</h1>
         </div>
       </div>
 

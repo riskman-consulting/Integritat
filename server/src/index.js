@@ -48,16 +48,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
+// Error handler middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
     success: false,
-    message: 'Route not found'
+    message: err.message || 'Internal server error'
   });
 });
 
-// Start server
-app.listen(PORT, () => {
+// Start server with error handling
+const server = app.listen(PORT, () => {
   console.log(`
   ╔════════════════════════════════════╗
   ║  INTEGRITAT SERVER STARTED 🚀      ║
@@ -65,6 +66,36 @@ app.listen(PORT, () => {
   ║  Environment: ${process.env.NODE_ENV || 'development'}        ║
   ╚════════════════════════════════════╝
   `);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`
+  ╔════════════════════════════════════╗
+  ║  ❌ PORT ${PORT} IS ALREADY IN USE     ║
+  ║  Please stop other instances or    ║
+  ║  change the PORT in .env file      ║
+  ╚════════════════════════════════════╝
+    `);
+    process.exit(1);
+  } else {
+    console.error('Server error:', err);
+    process.exit(1);
+  }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('\nSIGINT signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
 });
 
 export default app;

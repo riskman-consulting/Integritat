@@ -11,6 +11,8 @@ const CLIENTS_FILE = path.join(DATA_DIR, 'clients.json');
 const PROJECTS_FILE = path.join(DATA_DIR, 'projects.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const CHECKLISTS_FILE = path.join(DATA_DIR, 'checklists.json');
+const DOCUMENTS_FILE = path.join(DATA_DIR, 'documents.json');
+const PROJECT_TEAM_FILE = path.join(DATA_DIR, 'project_team.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -28,6 +30,8 @@ initFile(CLIENTS_FILE, []);
 initFile(PROJECTS_FILE, []);
 initFile(USERS_FILE, []);
 initFile(CHECKLISTS_FILE, []);
+initFile(DOCUMENTS_FILE, []);
+initFile(PROJECT_TEAM_FILE, []);
 
 // Helper functions
 const readData = (filePath) => {
@@ -109,14 +113,11 @@ export const query = async (text, params = []) => {
           const client = clients.find(c => c.id === p.client_id);
           const teamLead = users.find(u => u.id === p.team_lead_id);
           return {
-            id: p.id,
-            project_code: p.project_code,
+            ...p, // Include all project fields
             client_name: client?.legal_name || 'Unknown',
-            team_lead: teamLead ? `${teamLead.first_name} ${teamLead.last_name}` : null,
-            status: p.status,
+            team_lead_name: teamLead ? `${teamLead.first_name} ${teamLead.last_name}` : null,
             total_checklists: 0,
-            completed_checklists: 0,
-            completion_date: p.completion_date
+            completed_checklists: 0
           };
         })
       };
@@ -173,6 +174,69 @@ export const query = async (text, params = []) => {
       }
 
       return { rows: checklists };
+    }
+
+    // Documents queries
+    if (queryLower.includes('from documents')) {
+      const documents = readData(DOCUMENTS_FILE);
+      const users = readData(USERS_FILE);
+
+      if (queryLower.includes('where project_id =')) {
+        const projectId = params[0];
+        const filtered = documents.filter(d => d.project_id === projectId);
+
+        // Join with users for uploaded_by_name
+        const result = filtered.map(d => {
+          const user = users.find(u => u.id === d.uploaded_by);
+          return {
+            ...d,
+            uploaded_by_name: user ? `${user.first_name} ${user.last_name}` : null
+          };
+        });
+        return { rows: result };
+      }
+
+      if (queryLower.includes('where checklist_id =')) {
+        const checklistId = params[0];
+        const filtered = documents.filter(d => d.checklist_id === checklistId);
+
+        const result = filtered.map(d => {
+          const user = users.find(u => u.id === d.uploaded_by);
+          return {
+            ...d,
+            uploaded_by_name: user ? `${user.first_name} ${user.last_name}` : null
+          };
+        });
+        return { rows: result };
+      }
+
+      return { rows: documents };
+    }
+
+    // Project team queries
+    if (queryLower.includes('from project_team')) {
+      const projectTeam = readData(PROJECT_TEAM_FILE);
+      const users = readData(USERS_FILE);
+
+      if (queryLower.includes('where project_id =')) {
+        const projectId = params[0];
+        const filtered = projectTeam.filter(pt => pt.project_id === projectId);
+
+        // Join with users
+        const result = filtered.map(pt => {
+          const user = users.find(u => u.id === pt.user_id);
+          return {
+            ...pt,
+            first_name: user?.first_name,
+            last_name: user?.last_name,
+            email: user?.email,
+            user_role: user?.role
+          };
+        });
+        return { rows: result };
+      }
+
+      return { rows: projectTeam };
     }
   }
 
@@ -267,6 +331,41 @@ export const query = async (text, params = []) => {
     return { rows: [newChecklist] };
   }
 
+  if (queryLower.startsWith('insert into documents')) {
+    const documents = readData(DOCUMENTS_FILE);
+    const newDocument = {
+      id: uuidv4(),
+      project_id: params[0],
+      checklist_id: params[1],
+      file_name: params[2],
+      file_key: params[3],
+      file_size: params[4],
+      mime_type: params[5],
+      uploaded_by: params[6],
+      metadata: params[7],
+      upload_date: new Date().toISOString(),
+      created_at: new Date().toISOString()
+    };
+    documents.push(newDocument);
+    writeData(DOCUMENTS_FILE, documents);
+    return { rows: [newDocument] };
+  }
+
+  if (queryLower.startsWith('insert into project_team')) {
+    const projectTeam = readData(PROJECT_TEAM_FILE);
+    const newTeamMember = {
+      id: uuidv4(),
+      project_id: params[0],
+      user_id: params[1],
+      work_percentage: params[2],
+      role: params[3],
+      added_at: new Date().toISOString()
+    };
+    projectTeam.push(newTeamMember);
+    writeData(PROJECT_TEAM_FILE, projectTeam);
+    return { rows: [newTeamMember] };
+  }
+
   // UPDATE queries
   if (queryLower.startsWith('update clients')) {
     const clients = readData(CLIENTS_FILE);
@@ -340,6 +439,33 @@ export const query = async (text, params = []) => {
     const filtered = projects.filter(p => p.id !== id);
     const deleted = projects.find(p => p.id === id);
     writeData(PROJECTS_FILE, filtered);
+    return { rows: deleted ? [{ id: deleted.id }] : [] };
+  }
+
+  if (queryLower.startsWith('delete from audit_checklists')) {
+    const checklists = readData(CHECKLISTS_FILE);
+    const id = params[0];
+    const filtered = checklists.filter(c => c.id !== id);
+    const deleted = checklists.find(c => c.id === id);
+    writeData(CHECKLISTS_FILE, filtered);
+    return { rows: deleted ? [{ id: deleted.id }] : [] };
+  }
+
+  if (queryLower.startsWith('delete from documents')) {
+    const documents = readData(DOCUMENTS_FILE);
+    const id = params[0];
+    const filtered = documents.filter(d => d.id !== id);
+    const deleted = documents.find(d => d.id === id);
+    writeData(DOCUMENTS_FILE, filtered);
+    return { rows: deleted ? [{ id: deleted.id }] : [] };
+  }
+
+  if (queryLower.startsWith('delete from project_team')) {
+    const projectTeam = readData(PROJECT_TEAM_FILE);
+    const id = params[0];
+    const filtered = projectTeam.filter(pt => pt.id !== id);
+    const deleted = projectTeam.find(pt => pt.id === id);
+    writeData(PROJECT_TEAM_FILE, filtered);
     return { rows: deleted ? [{ id: deleted.id }] : [] };
   }
 
