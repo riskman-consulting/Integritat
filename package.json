@@ -1,0 +1,12 @@
+{
+  "name": "integritat",
+  "version": "1.0.0",
+  "description": "Integritat - Audit Management & Risk Compliance System",
+  "main": "server/src/index.js",
+  "scripts": {
+    "start": "cd server && node src/index.js"
+  },
+  "keywords": ["audit", "compliance", "risk"],
+  "author": "Riskman Consulting",
+  "license": "ISC"
+}
