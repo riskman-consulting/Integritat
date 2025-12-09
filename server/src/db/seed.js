@@ -82,12 +82,12 @@ async function seedDatabase() {
         `INSERT INTO clients (
           client_code, legal_name, entity_type, address_line1, address_line2,
           city, state, country, zip_code, incorporation_date, business_nature,
-          tax_id, contact_name, contact_email, contact_phone
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+          tax_id, contact_name, contact_email, contact_phone, prior_auditor, documents
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
         [
           client.code, client.name, client.entityType, '123 Business Street', 'Suite 100',
           client.city, client.state, client.country, client.zipCode, null, 'Professional Services',
-          client.taxId, client.contactName, client.contactEmail, client.contactPhone
+          client.taxId, client.contactName, client.contactEmail, client.contactPhone, null, '[]'
         ]
       );
     }

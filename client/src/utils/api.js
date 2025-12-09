@@ -191,9 +191,9 @@ export const projectAPI = {
   },
 
   addTeamMember: async (projectId, memberData) => {
-    const res = await apiCall(`/projects/${projectId}/team`, {
+    const res = await apiCall(`/projects/team`, {
       method: 'POST',
-      body: JSON.stringify(memberData)
+      body: JSON.stringify({ projectId, ...memberData })
     });
     return res.json();
   },

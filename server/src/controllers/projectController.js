@@ -116,14 +116,14 @@ export const addTeamMember = asyncHandler(async (req, res) => {
 });
 
 export const getProjectTeam = asyncHandler(async (req, res) => {
-  const { projectId } = req.params;
+  const { id } = req.params;
 
   const result = await query(
     `SELECT pt.*, u.first_name, u.last_name, u.email, u.role as user_role
      FROM project_team pt
      JOIN users u ON pt.user_id = u.id
      WHERE pt.project_id = $1`,
-    [projectId]
+    [id]
   );
 
   res.json({
