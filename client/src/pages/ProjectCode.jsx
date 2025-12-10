@@ -371,7 +371,7 @@ const ProjectCode = () => {
 
       {/* Document Management Modal */}
       {isDocModalOpen && selectedProject && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-center items-center z-[9999] p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             {/* Header */}
             <div className="border-b border-slate-100 px-6 py-4 flex justify-between items-center">
