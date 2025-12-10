@@ -27,122 +27,121 @@
 
 ### Part A: Deploy Backend to Railway
 
-#### Step 1: Prepare Backend for Deployment
+#### Step 1: Verify Configuration Files
 
-1. **Create `server/.gitignore`** (if not exists):
-```
-node_modules/
-.env
-data/
-uploads/
-*.log
-```
+The following files have been created for Railway deployment:
 
-2. **Update `server/package.json`** - Add start script:
-```json
-{
-  "scripts": {
-    "dev": "node --watch src/index.js",
-    "start": "node src/index.js",
-    "seed": "node src/db/seed.js"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
-}
-```
+1. **`railway.json`** - Railway deployment configuration
+2. **`package.json`** (root) - Monorepo package configuration
+3. **`server/package.json`** - Updated with engines field
+4. **`server/.env.railway`** - Environment variables template
+
+These files are already configured for your monorepo structure.
 
 #### Step 2: Push to GitHub
 
 ```bash
 cd "C:\Users\Anirban\OneDrive - Zothenix Innovations Private Limited\Desktop\Riskman\Website"
 
-# Initialize git if not already done
-git init
+# Add all new files
 git add .
-git commit -m "Prepare for deployment"
+git commit -m "Add Railway deployment configuration"
 
-# Create GitHub repo and push
-# (Create repo on GitHub first, then:)
-git remote add origin https://github.com/YOUR_USERNAME/riskman.git
-git branch -M main
-git push -u origin main
+# If you haven't set up remote yet:
+# git remote add origin https://github.com/YOUR_USERNAME/riskman.git
+# git branch -M main
+
+# Push to GitHub
+git push origin main
 ```
 
-#### Step 3: Deploy to Railway
+#### Step 3: Create Railway Project
 
-1. Go to [railway.app](https://railway.app)
+1. Go to [railway.app](https://railway.app) and sign in
 2. Click **"New Project"**
 3. Select **"Deploy from GitHub repo"**
 4. Choose your `riskman` repository
-5. Railway will detect Node.js automatically
+5. Railway will automatically detect the `railway.json` configuration
 
 #### Step 4: Add PostgreSQL Database
 
 1. In your Railway project, click **"+ New"**
 2. Select **"Database" → "PostgreSQL"**
-3. Railway creates database automatically
-4. Copy the connection string
+3. Railway creates the database and provides `DATABASE_URL` automatically
+4. No need to copy the connection string manually
 
 #### Step 5: Configure Environment Variables
 
-In Railway project settings → **Variables**, add:
+In Railway project settings → **Variables**, add the following:
+
+> **Important**: Use `server/.env.railway` as a reference for all required variables.
+
+**Required Variables:**
 
 ```env
 # Server
 PORT=5000
 NODE_ENV=production
 
-# JWT Secrets (CHANGE THESE!)
-JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
-JWT_REFRESH_SECRET=your_super_secret_refresh_key_change_this_too
+# JWT Secrets (GENERATE NEW ONES!)
+# Run: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+JWT_SECRET=<generate-a-strong-secret-here>
+JWT_REFRESH_SECRET=<generate-another-strong-secret-here>
 JWT_EXPIRY=1h
 JWT_REFRESH_EXPIRY=7d
-
-# Database (Railway provides this automatically as DATABASE_URL)
-# You can use DATABASE_URL or set individual variables
 
 # CORS (Update after deploying frontend)
 CORS_ORIGIN=https://your-app.vercel.app
 
-# Storage
+# Storage (choose one)
 STORAGE_TYPE=local
-# Or use Azure:
+# OR for Azure Blob Storage:
 # STORAGE_TYPE=azure
-# AZURE_STORAGE_CONNECTION_STRING=your_azure_connection_string
+# AZURE_STORAGE_CONNECTION_STRING=your_connection_string
 # AZURE_CONTAINER_NAME=riskman-documents
+
+# File Upload
+MAX_FILE_SIZE=10485760
+ALLOWED_FILE_TYPES=pdf,doc,docx,xls,xlsx,jpg,jpeg,png
 ```
 
-#### Step 6: Set Root Directory
+> **Note**: `DATABASE_URL` is automatically provided by Railway when you add PostgreSQL.
 
-1. In Railway Settings → **"Root Directory"**
-2. Set to: `server`
-3. Save changes
+#### Step 6: Deploy
 
-#### Step 7: Deploy
+1. Railway automatically deploys when you push to GitHub
+2. Monitor the build logs in Railway dashboard
+3. Wait for deployment to complete (usually 2-3 minutes)
+4. Copy your Railway URL: `https://your-app.up.railway.app`
 
-1. Railway automatically deploys
-2. Wait for build to complete
-3. Copy your Railway URL: `https://your-app.up.railway.app`
+**Verify Deployment:**
+- Check logs for: `Server running on port 5000`
+- No `ERR_MODULE_NOT_FOUND` errors
+- Build status shows "Success"
 
-#### Step 8: Seed Database
+
+
+#### Step 7: Seed Database
 
 1. In Railway project → **"PostgreSQL"** → **"Connect"**
-2. Copy connection string
+2. Copy the `DATABASE_URL` connection string
 3. On your local machine:
 
 ```bash
 cd server
 
-# Set DATABASE_URL temporarily
+# Set DATABASE_URL temporarily (PowerShell)
 $env:DATABASE_URL="your_railway_postgres_connection_string"
 
-# Run migrations (if you have schema.sql)
-# psql $DATABASE_URL < src/db/schema.sql
-
-# Seed database
+# Seed database with initial data
 node src/db/seed.js
 ```
+
+**Verify Database:**
+- Check Railway PostgreSQL logs
+- Confirm tables are created
+- Verify admin user exists
+
 
 ---
 
@@ -586,29 +585,83 @@ npm install pg
 
 ## Troubleshooting
 
+### Railway Deployment Issues
+
+#### ERR_MODULE_NOT_FOUND: Cannot find package 'express'
+**Cause**: Railway can't find dependencies in monorepo structure.
+
+**Solution**:
+1. Verify `railway.json` exists in root directory
+2. Check that root `package.json` exists
+3. Ensure `railway.json` has correct build command:
+   ```json
+   {
+     "build": {
+       "buildCommand": "cd server && npm install"
+     }
+   }
+   ```
+4. Redeploy from Railway dashboard
+
+#### Build fails with "No package.json found"
+**Cause**: Railway is looking in wrong directory.
+
+**Solution**:
+1. Check `railway.json` configuration
+2. Alternative: Set Root Directory in Railway Settings to `server`
+3. Ensure `package.json` exists in root directory
+
+#### Database connection fails
+**Cause**: Missing or incorrect DATABASE_URL.
+
+**Solution**:
+1. Verify PostgreSQL service is added to Railway project
+2. Check that `DATABASE_URL` variable is set (Railway sets this automatically)
+3. Test connection from Railway logs
+4. Ensure server code uses `process.env.DATABASE_URL`
+
+#### Port binding errors
+**Cause**: App not listening on Railway's assigned port.
+
+**Solution**:
+1. Ensure your code uses `process.env.PORT`:
+   ```javascript
+   const PORT = process.env.PORT || 5000;
+   ```
+2. Set `PORT=5000` in Railway variables
+3. Check Railway logs for actual port assignment
+
 ### Backend won't start
-- Check environment variables
-- Verify database connection
-- Check port availability
-- Review logs: `pm2 logs` or Railway/Azure logs
+- Check environment variables in Railway dashboard
+- Verify database connection string
+- Review Railway deployment logs
+- Ensure all required dependencies are in `package.json`
+- Check Node.js version matches `engines` field
 
 ### Frontend can't connect to backend
-- Verify CORS_ORIGIN matches frontend URL
-- Check API_URL in frontend .env
-- Ensure backend is running
-- Check network/firewall rules
+- Verify `CORS_ORIGIN` matches frontend URL exactly
+- Check `VITE_API_URL` in Vercel environment variables
+- Ensure backend is running (check Railway logs)
+- Test API endpoint directly: `https://your-app.railway.app/api/health`
+- Check browser console for CORS errors
 
 ### Database connection fails
-- Verify connection string
-- Check database is running
-- Verify firewall rules
-- Test connection manually
+- Verify `DATABASE_URL` is set in Railway
+- Check PostgreSQL service is running
+- Test connection with Railway's built-in PostgreSQL client
+- Ensure SSL is configured for production:
+  ```javascript
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ```
 
 ### File uploads fail
-- Check upload directory permissions
-- Verify file size limits
-- Check Azure connection (if using)
-- Review multer configuration
+- Check upload directory permissions (not applicable for Railway ephemeral storage)
+- **Recommended**: Use Azure Blob Storage for production
+- Verify file size limits: `MAX_FILE_SIZE` environment variable
+- Check `ALLOWED_FILE_TYPES` configuration
+- Review multer configuration in server code
+- Check Railway logs for upload errors
+
 
 ---
 

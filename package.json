@@ -1,12 +1,24 @@
 {
-  "name": "integritat",
-  "version": "1.0.0",
-  "description": "Integritat - Audit Management & Risk Compliance System",
-  "main": "server/src/index.js",
-  "scripts": {
-    "start": "cd server && node src/index.js"
-  },
-  "keywords": ["audit", "compliance", "risk"],
-  "author": "Riskman Consulting",
-  "license": "ISC"
+    "name": "riskman-monorepo",
+    "version": "1.0.0",
+    "private": true,
+    "description": "RiskMan Consulting - Audit Management System",
+    "scripts": {
+        "start": "cd server && npm start",
+        "dev": "cd server && npm run dev",
+        "install-server": "cd server && npm install",
+        "install-client": "cd client && npm install",
+        "build-client": "cd client && npm run build"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
+    },
+    "keywords": [
+        "audit",
+        "compliance",
+        "risk-management"
+    ],
+    "author": "Riskman Consulting",
+    "license": "ISC"
 }
